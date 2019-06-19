@@ -1,0 +1,323 @@
+{
+  "dashboard": {
+    "id": 774626,
+    "title": "IBM DB2 Sample Dashboard",
+    "description": null,
+    "icon": "bar-chart",
+    "created_at": "2018-11-15T00:38:15Z",
+    "updated_at": "2018-11-15T00:38:15Z",
+    "visibility": "all",
+    "editable": "editable_by_all",
+    "ui_url": "https://insights.newrelic.com/accounts/1971343/dashboards/774626",
+    "api_url": "https://api.newrelic.com/v2/dashboards/774626",
+    "owner_email": "qyang@newrelic.com",
+    "metadata": {
+      "version": 1
+    },
+    "widgets": [
+      {
+        "visualization": "faceted_area_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 1,
+          "column": 1
+        },
+        "widget_id": 7551852,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(PREP_TIME_MS) WHERE queryName='Query Preparation Cost' TIMESERIES FACET hostname"
+          }
+        ],
+        "presentation": {
+          "title": "Query Preparation Time (ms)",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "gauge",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 1,
+          "column": 2
+        },
+        "widget_id": 7551853,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(INDEX_HIT_RATIO_PERCENT)"
+          }
+        ],
+        "presentation": {
+          "title": "Index Hit Ratio",
+          "notes": null,
+          "threshold": {
+            "red": 100
+          }
+        }
+      },
+      {
+        "visualization": "gauge",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 1,
+          "column": 3
+        },
+        "widget_id": 7551854,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(LOG_UTILIZATION_PERCENT) AS 'Log Utilisation %' WHERE queryName='Log Utilization Percent'"
+          }
+        ],
+        "presentation": {
+          "title": "Log Utilisation",
+          "notes": null,
+          "threshold": {
+            "red": 100
+          }
+        }
+      },
+      {
+        "visualization": "facet_bar_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 2,
+          "column": 1
+        },
+        "widget_id": 7551855,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT count(STMT_TEXT) AS 'Query Count' WHERE queryName='Top Dynamic SQL' FACET STMT_TEXT"
+          }
+        ],
+        "presentation": {
+          "title": "Top Dynamic SQL",
+          "notes": null,
+          "drilldown_dashboard_id": 766016
+        }
+      },
+      {
+        "visualization": "facet_bar_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 2,
+          "column": 2
+        },
+        "widget_id": 7551856,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(PERCENT_ROWS_SELECTED) WHERE queryName='Application Performance' FACET APPL_NAME"
+          }
+        ],
+        "presentation": {
+          "title": "Application Row Selection",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "facet_bar_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 2,
+          "column": 3
+        },
+        "widget_id": 7551857,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "SELECT uniqueCount(hostname) FROM DB2 FACET hostname"
+          }
+        ],
+        "presentation": {
+          "title": "DB2 Instances",
+          "notes": null,
+          "drilldown_dashboard_id": 766016
+        }
+      },
+      {
+        "visualization": "facet_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 1
+        },
+        "widget_id": 7551858,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT count(STMT_TEXT) AS 'Query Count', average(ELAPSED_TIME_MIN) AS 'Execution Time (minutes)' WHERE queryName='Long Running Queries' FACET STMT_TEXT"
+          }
+        ],
+        "presentation": {
+          "title": "Long Running Queries",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "facet_bar_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 2
+        },
+        "widget_id": 7551859,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT count(TBSP_NAME) AS 'Locks Held' WHERE queryName='Locks Held' AND TBSP_NAME IS NOT NULL FACET TBSP_NAME"
+          }
+        ],
+        "presentation": {
+          "title": "Locks Held",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "facet_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 3
+        },
+        "widget_id": 7551860,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(TOTAL_PHYSICAL_READS), average(AVERAGE_READ_TIME_MS) WHERE queryName='BP Read IO' FACET BP_NAME"
+          }
+        ],
+        "presentation": {
+          "title": "BP Read IO",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "facet_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 4,
+          "column": 1
+        },
+        "widget_id": 7551861,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(ROWS_READ) AS 'Rows Read', average(ROWS_RETURNED) AS 'Rows Returned', average(TOTAL_CPU_TIME) AS 'Total CPU Time', average(TOTAL_SORTS) AS 'Total Sorts', average(TOTAL_WAIT_TIME) AS 'Total Wait Time' WHERE queryName='CPU Utilization' FACET hostname"
+          }
+        ],
+        "presentation": {
+          "title": "CPU Utilisation",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "event_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 4,
+          "column": 2
+        },
+        "widget_id": 7551862,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT * WHERE queryName='Tablespace Utilization'"
+          }
+        ],
+        "presentation": {
+          "title": "Tablespace Utilisation",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "event_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 4,
+          "column": 3
+        },
+        "widget_id": 7551863,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT * WHERE queryName='Tablespaces'"
+          }
+        ],
+        "presentation": {
+          "title": "Tablespaces",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "event_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 5,
+          "column": 1
+        },
+        "widget_id": 7551864,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT * WHERE queryName='Partition Memory'"
+          }
+        ],
+        "presentation": {
+          "title": "Partition Memory",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "facet_table",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 5,
+          "column": 2
+        },
+        "widget_id": 7551865,
+        "account_id": 1,
+        "data": [
+          {
+            "nrql": "FROM DB2 SELECT average(TBSP_EXTENT_SIZE) AS 'Extent Size', average(TBSP_FREE_PAGES) AS 'Free Pages', average(TBSP_FREE_SIZE_KB) AS 'Free Size (KB)' WHERE queryName='database Utilization' FACET TBSP_NAME"
+          }
+        ],
+        "presentation": {
+          "title": "Database Utilisation",
+          "notes": null,
+          "drilldown_dashboard_id": null
+        }
+      }
+    ],
+    "filter": {
+      "event_types": [
+        "DB2"
+      ],
+      "attributes": [
+        "hostname",
+        "STMT_TEXT"
+      ]
+    }
+  }
+}

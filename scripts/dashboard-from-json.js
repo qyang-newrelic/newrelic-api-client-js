@@ -26,7 +26,8 @@ function readDashFromFS(fname) {
     console.log('Read source dashboard named: ' + dashboardBody.dashboard.title);
     
     var destId = config.get(program.dest).accountId;
-    dashboardBody = dashboards.updateAccountId(dashboardBody, 1, destId);
+    //dashboardBody = dashboards.updateAccountId(dashboardBody, 1, destId);
+    dashboardBody = dashboards.setAccountId(dashboardBody, destId);
     console.log(dashboardBody);
   } else {
     console.error('Problem reading file', fname);
