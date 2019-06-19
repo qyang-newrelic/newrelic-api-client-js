@@ -85,14 +85,13 @@ Gather the PartnerId from your partnership admin console, and the Partner Rest k
 }
 ```
 
-### Using the scripts
+## Using the scripts
 
 Sample 1 - 
 List all dashboards in an account
 
 ```
 [qyang@han newrelic-api-client-js]$ node scripts/list_all_dashboards.js --src stage
-
 ```
 
 ### Execute Tests
