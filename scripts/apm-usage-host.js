@@ -24,24 +24,28 @@ const NRQL_EC2 = "SELECT latest(label.AppName) FROM ComputeSample WHERE provider
 
 // Global variables
 var configId;
+var publishId;
 var sinceEpoch;
 var untilEpoch;
 var accountResult = [];
 var doneCount = 0;
 var doneExpected = 3;
 var dateStart = new Date();
+var publishData = false;
 
 function toInsights() {
 	var jsonArr = Object.values(accountResult);
-	insights.publish(jsonArr, configId, function(error, response, body) {
-		console.log(response);	
+	insights.publish(jsonArr, publishId, function(error, response, body) {
+		console.log(response.body);	
 	});
 }
 
 
 function toCSV() {
-	//console.log('Sending to Insight');
-	//toInsights();
+	if ( publishData ) {
+		console.log('Sending to Insight');
+		toInsights();
+	} 
   console.log('Create CSV');
 	
   
@@ -80,7 +84,7 @@ function checkDone(usageType) {
 }
 
 function runQuery(nrql, usageType) {
-  console.log(nrql);
+  //console.log(nrql);
   insights.query(nrql, configId, function(error, response, body) {
     var parsedBody = helper.handleCB(error, response, body);
     //console.log(parsedBody);
@@ -120,7 +124,7 @@ function parseUsage(facetArr, usageType) {
 function lookupHost(hostId) {
   var acct = accountResult[hostId];
 
-	console.log(dateStart.toISOString().substring(0, 10));
+	//console.log(dateStart.toISOString().substring(0, 10));
 
   if (acct == null) {
     acct = { 'eventType': 'trpNrUsage',
@@ -154,7 +158,8 @@ function runQueries() {
   runQuery(nrqlInfra, 'infra');
 
   var nrqlEc2 = NRQL_EC2 + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
-  console.log(nrqlEc2);
+
+  // console.log(nrqlEc2);
   runQuery(nrqlEc2, 'appName');
 
 }
@@ -174,6 +179,7 @@ program
   .option('--month [month]', 'Which month to report in mm (ex: 01)')
   .option('--day [day]', 'Which month to report in mm (ex: 01)')
   .option('--account [account]', 'Account name to run against from your config')
+  .option('--publish [account]', 'Account name to send the data')
   .parse(process.argv);
 
 if (!process.argv.slice(8).length) {
@@ -186,10 +192,27 @@ if (!process.argv.slice(8).length) {
     var iDay = parseInt(program.day) ; // JS months start at 0?
     dateStart.setFullYear(iYear, iMonth, iDay);
     dateStart.setHours(0, 0, 0, 0);
+    if (dateStart.getMonth() != iMonth ) {
+			console.log('wrong input - do nothing' ) ;
+			return;
+		}
+
     var dateEnd = new Date(dateStart.getTime()+ 86400000);
 
-    // Check that the account is valid
-    if (config.has(program.account)) {
+
+    if (program.publish && config.has(program.publish)) {
+      console.log('Publish data  ', program.publish, 'for the dates', dateStart, 'to', dateEnd);
+      publishId = program.publish;
+			publishData = true;
+		} else {
+			if ( program.publish ) {
+				console.log('Could not find account in config - ' , program.publish);
+			}
+			console.log('Not publish data, only local csv file');
+		}
+	
+
+		if (config.has(program.account)) {
       console.log('Run against', program.account, 'for the dates', dateStart, 'to', dateEnd);
       configId = program.account;
       sinceEpoch = dateStart.getTime() / 1000;
