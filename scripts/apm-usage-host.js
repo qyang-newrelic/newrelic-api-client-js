@@ -27,11 +27,14 @@ var configId;
 var publishId;
 var sinceEpoch;
 var untilEpoch;
+var runEpoch;
+var runDate = new Date();
 var accountResult = [];
 var doneCount = 0;
 var doneExpected = 3;
 var dateStart = new Date();
 var publishData = false;
+var loadTag;
 
 function toInsights() {
 	var jsonArr = Object.values(accountResult);
@@ -52,7 +55,7 @@ function toCSV() {
   // Setup the input
   var input = {
     data: Object.values(accountResult),
-    fields: ['eventType', 'date', 'hostId', 'apm','infra' , 'appName']
+    fields: ['eventType', 'loadTag', 'time', 'hostId', 'apm','infra' , 'appName']
   }
 
   // Store the CSV
@@ -61,7 +64,7 @@ function toCSV() {
       console.log('ERROR!');
       console.log(err);
     } else {
-      var fname = 'usage-' + program.year + '-' + program.month + '-' + new Date().getTime() + '.csv';
+      var fname = 'u' + program.year + '-' + program.month + '-' + program.day + '_' + loadTag + '.csv';
       console.log('Writing usage to: ' + fname);
       //console.log('Writing usage to: ' + csvData);
       fs.writeFile(fname, csvData, function(fileErr) {
@@ -124,11 +127,12 @@ function parseUsage(facetArr, usageType) {
 function lookupHost(hostId) {
   var acct = accountResult[hostId];
 
-	//console.log(dateStart.toISOString().substring(0, 10));
-
+	//console.log(dateStart.toISOString().substring(0, 10)); 
+	//
   if (acct == null) {
     acct = { 'eventType': 'trpNrUsage',
-			'date': dateStart.toISOString().substring(0, 10),
+			'loadTag': loadTag,
+			'time': sinceEpoch,
 			'hostId': hostId 
 		} ;
     accountResult[hostId] = acct;
@@ -180,6 +184,7 @@ program
   .option('--day [day]', 'Which month to report in mm (ex: 01)')
   .option('--account [account]', 'Account name to run against from your config')
   .option('--publish [account]', 'Account name to send the data')
+  .option('--tag [loadTag]', 'load Tag to insights')
   .parse(process.argv);
 
 if (!process.argv.slice(8).length) {
@@ -211,12 +216,20 @@ if (!process.argv.slice(8).length) {
 			console.log('Not publish data, only local csv file');
 		}
 	
+		if (program.tag ) {
+			loadTag=program.tag
+		} else {
+			loadTag= runDate.toISOString().substring(0, 15);  // tag - UTC time to 10 minutes
+		}
+
+		console.log('Load Tag is: ' , loadTag);
 
 		if (config.has(program.account)) {
       console.log('Run against', program.account, 'for the dates', dateStart, 'to', dateEnd);
       configId = program.account;
       sinceEpoch = dateStart.getTime() / 1000;
       untilEpoch = dateEnd.getTime() / 1000;
+      runEpoch= runDate.getTime() /1000;
       runQueries();
     } else {
       console.error('Could not find account in config, double check your NODE_ENV=', process.env.NODE_ENV);
