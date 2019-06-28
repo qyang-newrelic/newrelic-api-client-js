@@ -9,13 +9,15 @@ const fs = require('fs');
 var program = require('commander');
 
 // Why do we divide by 1? Because it makes the JSON output have the attribute name "result"
-const NRQL_APM = "SELECT sum(apmComputeUnits)/1  FROM NrDailyUsage WHERE `productLine` = 'APM' AND `usageType` = 'Host' ";
-const NRQL_INFRA = "SELECT SUM(infrastructureComputeUnits) / 1 FROM NrDailyUsage WHERE `productLine` = 'Infrastructure' AND `usageType` = 'Host' ";
+//const NRQL_APM = "SELECT sum(apmComputeUnits)/1  FROM NrDailyUsage WHERE `productLine` = 'APM' AND `usageType` = 'Host' ";
+const NRQL_APM = "SELECT * FROM NrDailyUsage WHERE `productLine` = 'APM' AND `usageType` = 'Host' ";
+//const NRQL_INFRA = "SELECT SUM(infrastructureComputeUnits) / 1 FROM NrDailyUsage WHERE `productLine` = 'Infrastructure' AND `usageType` = 'Host' ";
+const NRQL_INFRA = "SELECT * FROM NrDailyUsage WHERE `productLine` = 'Infrastructure' AND `usageType` = 'Host' ";
 
 // NRQL queries for script
-const NRQL_FACET = " FACET hostId, cloudInstanceId, agentHostname LIMIT 2000 "
+const NRQL_LIMIT =  " limit 2000 "
 
-const NRQL_EC2 = "SELECT latest(AppName), latest(AppID), latest(AppId) FROM ComputeSample WHERE provider = 'Ec2Instance' facet ec2InstanceId, ec2PrivateDnsName limit 2000"
+const NRQL_EC2 = "SELECT count(timestamp)  FROM ComputeSample WHERE provider = 'Ec2Instance' facet ec2InstanceId, ec2PrivateDnsName, AppName, AppID, AppId"
 
 
 // Global variables
@@ -26,33 +28,38 @@ var awsSinceEpoch;
 var untilEpoch;
 var runEpoch;
 var runDate = new Date();
-var accountResult = [];
+var apmResult= [];
+var infraResult= [];
 var doneCount = 0;
 var doneExpected = 3;
 var dateStart = new Date();
 var publishData = false;
 var loadTag;
 var env;
+var debug=false;
 
-function toInsights() {
-	var jsonArr = Object.values(accountResult);
+function toInsights(obj) {
+	var jsonArr = Object.values(obj);
+  console.log("data size: ", jsonArr.length);
 	insights.publish(jsonArr, publishId, function(error, response, body) {
 		console.log(response.body);	
 	});
+
 }
 
 
-function toCSV() {
+function toCSV(obj) {
 	if ( publishData ) {
 		console.log('Sending to Insight');
-		toInsights();
+		toInsights(obj);
 	} 
+	return;
   console.log('Create CSV');
 	
   
   // Setup the input
   var input = {
-    data: Object.values(accountResult),
+    data: Object.values(obj),
     fields: ['eventType', 'loadTag', 'time', 'env', 'hostId', 'apm','infra' , 'ec2InstanceId', 'AppName', 'AppID', 'AppId', 'ec2PrivateDnsName', 'agentHostname']
   }
 
@@ -79,8 +86,8 @@ function checkDone(usageType) {
   console.log(usageType, 'done');
   if (doneCount == doneExpected) {
     console.log('All done running queries');
-    //console.log(accountResult);
-    toCSV();
+    toCSV(infraResult);
+    toCSV(apmResult);
   }
 }
 
@@ -93,33 +100,40 @@ function runEC2Query(nrql, nrqlName) {
   });
 }
 
-function runQuery(nrql, usageType) {
+function runQuery(nrql, usageType, parseResult) {
   console.log(nrql);
   insights.query(nrql, configId, function(error, response, body) {
     var parsedBody = helper.handleCB(error, response, body);
-    parseUsage(parsedBody.facets, usageType);
+    parseResult(parsedBody.results[0].events, usageType);
     
     checkDone(usageType);
   });
 }
 
+function appendJson(target, dataObj) {
+	for (var key in dataObj) {
+  	target[key] = dataObj[key];
+ 	}
+}
+
 function parseEC2(facetArr, nrqlName) {
   // Loop over the facets
-  console.log("Query Result count =", facetArr.length);
+  console.log(nrqlName, " Query Result count =", facetArr.length);
   for (var i=0; i < facetArr.length; i++) {
     var facet = facetArr[i];
     
     // In the facet name section, 0 is accountId, 1 is accountName
     //var hostId= facet.name[0];
     var ec2InstanceId = facet.name[0];
+
     var hostId = ec2InstanceId;
-    var ec2PrivateDnsName = facet.name[1];
 
     // In the facet result section there should be a single value called result
     //var usageVal = facet.results[0].result;
-    var  AppName = Object.values(facet.results[0])[0];
-    var  AppID = Object.values(facet.results[1])[0];
-    var  AppId = Object.values(facet.results[2])[0];
+    var  ec2PrivateDnsName = facet.name[1];
+    var  AppName = facet.name[2];
+    var  AppID = facet.name[3];
+    var  AppId = facet.name[4];
  
 	  if ( ! AppID  && AppId ) {
 				AppID = AppId;
@@ -128,54 +142,53 @@ function parseEC2(facetArr, nrqlName) {
 		}
 
     // Get the account (or create it if it doesn't exist)
-    var acct = lookupHost(hostId);
+    var apmAcct = lookupHost(hostId,apmResult);
+    var infraAcct = lookupHost(hostId,infraResult);
+
+		var awsInfo = {
+    	'AppName': AppName,
+    	'AppID': AppID,
+    	'AppId': AppId,
+    	'ec2InstanceId': ec2InstanceId,
+    	'ec2PrivateDnsName': ec2PrivateDnsName};
 
     // Add that usage data to the account
-    acct['AppName'] = AppName;
-    acct['AppID'] = AppID;
-    acct['AppId'] = AppId;
-    acct['ec2InstanceId'] = ec2InstanceId;
-    acct['ec2PrivateDnsName'] = ec2PrivateDnsName;
+    appendJson(infraAcct,awsInfo);
+    appendJson(apmAcct,awsInfo);
 
-		//console.log("acct =" , acct);
+		//console.log("apmAcct =" , apmAcct);
+		//console.log("infraAcct =" , infraAcct);
   }
 	
 }
 
-function parseUsage(facetArr, usageType) {
+function parseAPMUsage(eventArr, usageType) {
   // Loop over the facets
-  console.log("Query Result count =", facetArr.length);
-  for (var i=0; i < facetArr.length; i++) {
-    var facet = facetArr[i];
+  console.log(usageType, " Query Result count =", eventArr.length);
+  for (var i=0; i < eventArr.length; i++) {
+    var ev = eventArr[i];
     
     // In the facet name section, 0 is accountId, 1 is accountName
     //var hostId= facet.name[0];
-    var hostId= facet.name[0];
-    var cloudInstanceId= facet.name[1];
-    var agentHostname = facet.name[2];
+    var hostId= ev.hostId;
 
     // In the facet result section there should be a single value called result
     //var usageVal = facet.results[0].result;
-    var usageVal = Object.values(facet.results[0])[0];
+    var event = ev;
 
     // Get the account (or create it if it doesn't exist)
     //
-    if ( ! hostId ) {
-			if ( ! cloudInstanceId ) {
-					hostId = agentHostname;
-			}
-			else {
-				hostId = cloudInstanceId;
-			}
-		}
 
-    var acct = lookupHost(hostId);
+    var acct = lookupHost(hostId,apmResult);
 
+		
     // Add that usage data to the account
-    acct[usageType] = usageVal;
-    acct['agentHostname'] = agentHostname;
+    appendJson(acct,ev);
 
-    if ( false ) { 
+		delete acct.timestamp;
+
+		
+    if ( debug ) { 
     //if ( usageType || usageType == 'infra' ) { 
 			console.log("acct =" , acct);
 		}
@@ -183,45 +196,71 @@ function parseUsage(facetArr, usageType) {
   }
 }
 
-function lookupHost(hostId) {
-  var acct = accountResult[hostId];
+function parseInfraUsage(eventArr, usageType) {
+  // Loop over the facets
+  console.log(usageType, " Query Result count =", eventArr.length);
+  for (var i=0; i < eventArr.length; i++) {
+    var ev = eventArr[i];
+    
+    // In the facet name section, 0 is accountId, 1 is accountName
+    //var hostId= facet.name[0];
+    var hostId= ev.hostId;
+
+    // In the facet result section there should be a single value called result
+    //var usageVal = facet.results[0].result;
+    var event = ev;
+
+    // Get the account (or create it if it doesn't exist)
+    //
+    if ( ! hostId ) {
+			if ( ! ev.cloudInstanceId ) {
+					hostId = ev.agentHostname;
+			}
+			else {
+				hostId = ev.cloudInstanceId;
+			}
+		}
+
+    var acct = lookupHost(hostId,infraResult);
+
+    // Add that usage data to the account
+    appendJson(acct,ev);
+		delete acct.timestamp;
+
+    if ( debug ) { 
+    //if ( usageType || usageType == 'infra' ) { 
+			console.log("acct =" , acct);
+		}
+    // console.log(acct);
+  }
+}
+
+function lookupHost(hostId, resultArr) {
+  var acct = resultArr[hostId];
 
 	//console.log(dateStart.toISOString().substring(0, 10)); 
 	//
   if (acct == null) {
-    acct = { 'eventType': 'trpNrUsage',
+    acct = { 'eventType': 'awsNrUsage',
 			'loadTag': loadTag,
 			'time': sinceEpoch,
-			'env': env,
-			'hostId': hostId 
+			'env': env
 		} ;
-    accountResult[hostId] = acct;
-  }
-  return acct;
-}
-
-function lookupAccount(accountId, accountName) {
-  var acct = accountResult[accountId];
-  if (acct == null) {
-    acct = {
-      'accountId': accountId,
-      'accountName': accountName
-    }
-    accountResult[accountId] = acct;
+    resultArr[hostId] = acct;
   }
   return acct;
 }
 
 function runQueries() {
-  var nrqlApm = NRQL_APM + NRQL_FACET + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
-  runQuery(nrqlApm, 'apm');
+  var nrqlApm = NRQL_APM + NRQL_LIMIT + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
+  runQuery(nrqlApm, 'apm', parseAPMUsage);
   
 
-  var nrqlInfra = NRQL_INFRA + NRQL_FACET + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
+  var nrqlInfra = NRQL_INFRA + NRQL_LIMIT + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
 
-  runQuery(nrqlInfra, 'infra');
+  runQuery(nrqlInfra, 'infra', parseInfraUsage);
 
-  var nrqlEc2 = NRQL_EC2 + ' SINCE ' + awsSinceEpoch + ' UNTIL ' + untilEpoch;
+  var nrqlEc2 = NRQL_EC2 + NRQL_LIMIT + ' SINCE ' + awsSinceEpoch + ' UNTIL ' + untilEpoch;
 
   // console.log(nrqlEc2);
   runEC2Query(nrqlEc2, 'EC2');
@@ -289,7 +328,7 @@ if (!process.argv.slice(8).length) {
       configId = program.account;
       env = program.account;
       sinceEpoch = dateStart.getTime() / 1000;
-      awsSinceEpoch = dateStart.getTime() / 1000 - 86400;
+      awsSinceEpoch = dateStart.getTime() / 1000  - 86400;
       untilEpoch = dateEnd.getTime() / 1000;
       runEpoch= runDate.getTime() /1000;
       runQueries();
