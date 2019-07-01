@@ -8,16 +8,12 @@ const fs = require('fs');
 
 var program = require('commander');
 
-// Why do we divide by 1? Because it makes the JSON output have the attribute name "result"
-//const NRQL_APM = "SELECT sum(apmComputeUnits)/1  FROM NrDailyUsage WHERE `productLine` = 'APM' AND `usageType` = 'Host' ";
 const NRQL_APM = "SELECT * FROM NrDailyUsage WHERE `productLine` = 'APM' AND `usageType` = 'Host' ";
-//const NRQL_INFRA = "SELECT SUM(infrastructureComputeUnits) / 1 FROM NrDailyUsage WHERE `productLine` = 'Infrastructure' AND `usageType` = 'Host' ";
 const NRQL_INFRA = "SELECT * FROM NrDailyUsage WHERE `productLine` = 'Infrastructure' AND `usageType` = 'Host' ";
 
 // NRQL queries for script
-const NRQL_LIMIT =  " limit 2000 "
 
-const NRQL_EC2 = "SELECT count(timestamp)  FROM ComputeSample WHERE provider = 'Ec2Instance' facet ec2InstanceId, ec2PrivateDnsName, AppName, AppID, AppId"
+const NRQL_EC2 = "SELECT count(timestamp)  FROM ComputeSample WHERE provider = 'Ec2Instance' facet ec2InstanceId, ec2PrivateDnsName, label.AppName, label.AppID, label.AppId "
 
 
 // Global variables
@@ -37,6 +33,7 @@ var publishData = false;
 var loadTag;
 var env;
 var debug=false;
+var nrql_limit = 2000;
 
 function toInsights(obj) {
 	var jsonArr = Object.values(obj);
@@ -118,7 +115,12 @@ function appendJson(target, dataObj) {
 
 function parseEC2(facetArr, nrqlName) {
   // Loop over the facets
-  console.log(nrqlName, " Query Result count =", facetArr.length);
+  if (facetArr.length >= nrql_limit ) {
+  	console.error(nrqlName, " Query Result hit limit count =", facetArr.length);
+	} else {
+  	console.log(nrqlName, " Query Result count =", facetArr.length);
+  }
+
   for (var i=0; i < facetArr.length; i++) {
     var facet = facetArr[i];
     
@@ -146,9 +148,9 @@ function parseEC2(facetArr, nrqlName) {
     var infraAcct = lookupHost(hostId,infraResult);
 
 		var awsInfo = {
-    	'AppName': AppName,
-    	'AppID': AppID,
-    	'AppId': AppId,
+    	'label.AppName': AppName,
+    	'label.AppID': AppID,
+    	'label.AppId': AppId,
     	'ec2InstanceId': ec2InstanceId,
     	'ec2PrivateDnsName': ec2PrivateDnsName};
 
@@ -164,7 +166,12 @@ function parseEC2(facetArr, nrqlName) {
 
 function parseAPMUsage(eventArr, usageType) {
   // Loop over the facets
-  console.log(usageType, " Query Result count =", eventArr.length);
+  if (eventArr.length >= nrql_limit ) {
+  	console.error(usageType, " Query Result hit limit count =", eventArr.length);
+	} else {
+  	console.log(usageType, " Query Result count =", eventArr.length);
+  }
+
   for (var i=0; i < eventArr.length; i++) {
     var ev = eventArr[i];
     
@@ -189,7 +196,6 @@ function parseAPMUsage(eventArr, usageType) {
 
 		
     if ( debug ) { 
-    //if ( usageType || usageType == 'infra' ) { 
 			console.log("acct =" , acct);
 		}
     // console.log(acct);
@@ -198,7 +204,13 @@ function parseAPMUsage(eventArr, usageType) {
 
 function parseInfraUsage(eventArr, usageType) {
   // Loop over the facets
-  console.log(usageType, " Query Result count =", eventArr.length);
+  if (eventArr.length >= nrql_limit ) {
+  	console.error(usageType, " Query Result hit limit count =", eventArr.length);
+		throw new Error('NRQL Query exceeds limits!');
+	} else {
+  	console.log(usageType, " Query Result count =", eventArr.length);
+  }
+
   for (var i=0; i < eventArr.length; i++) {
     var ev = eventArr[i];
     
@@ -241,7 +253,7 @@ function lookupHost(hostId, resultArr) {
 	//console.log(dateStart.toISOString().substring(0, 10)); 
 	//
   if (acct == null) {
-    acct = { 'eventType': 'awsNrUsage',
+    acct = { 'eventType': 'ec2NrUsage',
 			'loadTag': loadTag,
 			'time': sinceEpoch,
 			'env': env
@@ -252,15 +264,15 @@ function lookupHost(hostId, resultArr) {
 }
 
 function runQueries() {
-  var nrqlApm = NRQL_APM + NRQL_LIMIT + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
+  var nrqlApm = NRQL_APM + ' limit ' + nrql_limit + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
   runQuery(nrqlApm, 'apm', parseAPMUsage);
   
 
-  var nrqlInfra = NRQL_INFRA + NRQL_LIMIT + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
+  var nrqlInfra = NRQL_INFRA + ' limit ' + nrql_limit + ' SINCE ' + sinceEpoch + ' UNTIL ' + untilEpoch;
 
   runQuery(nrqlInfra, 'infra', parseInfraUsage);
 
-  var nrqlEc2 = NRQL_EC2 + NRQL_LIMIT + ' SINCE ' + awsSinceEpoch + ' UNTIL ' + untilEpoch;
+  var nrqlEc2 = NRQL_EC2 + ' limit ' + nrql_limit + ' SINCE ' + awsSinceEpoch + ' UNTIL ' + untilEpoch;
 
   // console.log(nrqlEc2);
   runEC2Query(nrqlEc2, 'EC2');
@@ -273,7 +285,7 @@ function runQueries() {
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-console.log('License usage to CSV tool');
+//console.log('License usage to CSV tool');
 
 program
   .version('0.0.1')
@@ -334,6 +346,7 @@ if (!process.argv.slice(8).length) {
       runQueries();
     } else {
       console.error('Could not find account in config, double check your NODE_ENV=', process.env.NODE_ENV);
+			throw new Error('wrong environment !');
     }
   } else {
     program.outputHelp();
