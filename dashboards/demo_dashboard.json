@@ -1,0 +1,85 @@
+{
+	"dashboard": {
+		"title": "Mad Dash Example",
+		"description": "This dashboard is an example of a Mad Dash template.",
+		"icon": "bar-chart",
+		"visibility": "all",
+		"editable": "editable_by_all",
+		"metadata": {
+			"version": 1
+		},
+		"widgets": [{
+				"visualization": "billboard",
+				"layout": {
+					"width": 1,
+					"height": 1,
+					"row": 1,
+					"column": 1
+				},
+				"data": [{
+						"nrql": "SELECT count(*) from Transaction where appId = {{appId}}"
+					}
+				],
+				"presentation": {
+					"title": "Some application's throughput",
+					"notes": "You can even do notes!",
+					"threshold": {
+						"red": 4.0,
+						"yellow": 1.0
+					}
+				}
+			}, {
+				"visualization": "billboard",
+				"layout": {
+					"width": 1,
+					"height": 1,
+					"row": 1,
+					"column": 2
+				},
+				"data": [{
+						"nrql": "From KafkaConsumerLag select max(consumedPerSecond) where cluster = '{{appName}}'"
+					}
+				],
+				"presentation": {
+					"title": "Kafka monitoring targeting a specific environment!",
+					"notes": null,
+					"threshold": {
+						"red": null,
+						"yellow": null
+					}
+				}
+			}, {
+				"visualization": "metric_line_chart",
+				"layout": {
+					"width": 1,
+					"height": 1,
+					"row": 1,
+					"column": 3
+				},
+				"data": [{
+						"duration": 604800000,
+						"end_time": null,
+						"entity_ids": [{{appId}}],
+						"compare_with": null,
+						"metrics": [{
+								"name": "Apdex",
+								"units": null,
+								"scope": "",
+								"values": ["value"]
+							}
+						],
+						"raw_metric_name": "Apdex",
+						"facet": null,
+						"order_by": "value",
+						"limit": 10
+					}
+				],
+				"presentation": {
+					"title": "PetClinicV2 - Apdex",
+					"notes": null
+				}
+			}
+		],
+		"filter": null
+	}
+}
