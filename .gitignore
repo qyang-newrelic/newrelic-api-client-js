@@ -44,3 +44,6 @@ config/*
 # Custom scripts
 customScripts
 *.sh
+
+
+dashboards/*_config.json

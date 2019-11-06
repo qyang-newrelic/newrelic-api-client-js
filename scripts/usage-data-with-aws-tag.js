@@ -168,6 +168,7 @@ function parseAPMUsage(eventArr, usageType) {
   // Loop over the facets
   if (eventArr.length >= nrql_limit ) {
   	console.error(usageType, " Query Result hit limit count =", eventArr.length);
+		throw new Error('NRQL Query exceeds limits!');
 	} else {
   	console.log(usageType, " Query Result count =", eventArr.length);
   }
