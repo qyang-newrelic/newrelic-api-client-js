@@ -1,6 +1,5 @@
 {
   "dashboard": {
-    "id": 1025424,
     "title": "Mad Dash Example",
     "description": "This dashboard is an example of a Mad Dash template.",
     "icon": "bar-chart",
@@ -8,8 +7,6 @@
     "updated_at": "2019-11-01T00:00:51Z",
     "visibility": "all",
     "editable": "editable_by_all",
-    "ui_url": "https://insights.newrelic.com/accounts/1971343/dashboards/1025424",
-    "api_url": "https://api.newrelic.com/v2/dashboards/1025424",
     "owner_email": "yangqi2004@gmail.com",
     "metadata": {
       "version": 1
