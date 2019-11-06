@@ -4,6 +4,7 @@
   ],
   "newrelic": {
     "accountId": "",
+    "graphQLKey": "",
     "restKey": "",
     "adminKey": "",
     "adminName": "",

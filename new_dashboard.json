@@ -1,19 +1,19 @@
 {
   "dashboard": {
-    "title": "Mad Dash Example",
-    "description": "This dashboard is an example of a Mad Dash template.",
+    "title": "NR: stpdistributions-disvc - NP2",
+    "description": null,
     "icon": "bar-chart",
-    "created_at": "2019-10-31T03:06:32Z",
-    "updated_at": "2019-11-01T00:00:51Z",
+    "created_at": "2019-11-05T19:01:40Z",
+    "updated_at": "2019-11-05T20:46:04Z",
     "visibility": "all",
     "editable": "editable_by_all",
-    "owner_email": "yangqi2004@gmail.com",
+    "owner_email": "qyang@newrelic.com",
     "metadata": {
       "version": 1
     },
     "widgets": [
       {
-        "visualization": "metric_line_chart",
+        "visualization": "facet_bar_chart",
         "layout": {
           "width": 1,
           "height": 1,
@@ -22,35 +22,17 @@
         },
         "data": [
           {
-            "duration": 1800000,
-            "end_time": null,
-            "entity_ids": [
-              367291997
-            ],
-            "compare_with": null,
-            "metrics": [
-              {
-                "name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/MaxWorkerPoolSize",
-                "units": null,
-                "scope": "",
-                "values": [
-                  "average_value"
-                ]
-              }
-            ],
-            "raw_metric_name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/MaxWorkerPoolSize",
-            "facet": null,
-            "order_by": "average_response_time",
-            "limit": 10
+            "nrql": "SELECT uniqueCount(entityId) from ComputeSample WHERE `ec2Tag_Name` LIKE 'stpdistributions%' and provider = 'Ec2Instance' facet `provider.awsRegion` SINCE 3 days ago LIMIT 1000"
           }
         ],
         "presentation": {
-          "title": "jbossapp01 - org.xnio/Xnio/\"nio\"/\"default\"/MaxWorkerPoolSize",
-          "notes": null
+          "title": "Instances per region - ComputeSample",
+          "notes": " Count of blah across all aws regoins repoting to new relic .... test",
+          "drilldown_dashboard_id": null
         }
       },
       {
-        "visualization": "metric_line_chart",
+        "visualization": "faceted_line_chart",
         "layout": {
           "width": 1,
           "height": 1,
@@ -59,35 +41,16 @@
         },
         "data": [
           {
-            "duration": 1800000,
-            "end_time": null,
-            "entity_ids": [
-              367291997
-            ],
-            "compare_with": null,
-            "metrics": [
-              {
-                "name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/CoreWorkerPoolSize",
-                "units": null,
-                "scope": "",
-                "values": [
-                  "average_value"
-                ]
-              }
-            ],
-            "raw_metric_name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/CoreWorkerPoolSize",
-            "facet": null,
-            "order_by": "average_value",
-            "limit": 10
+            "nrql": "SELECT uniqueCount(entityId) from ComputeSample WHERE `ec2Tag_Name` LIKE'stpdistributions%' and provider = 'Ec2Instance' facet `provider.ec2State` TIMESERIES SINCE 3 days ago LIMIT 1000"
           }
         ],
         "presentation": {
-          "title": "jbossapp01 - org.xnio/Xnio/\"nio\"/\"default\"/CoreWorkerPoolSize",
+          "title": "stpdistributions-disvc-% Instance state - ComputeSample",
           "notes": null
         }
       },
       {
-        "visualization": "metric_line_chart",
+        "visualization": "event_feed",
         "layout": {
           "width": 1,
           "height": 1,
@@ -96,35 +59,16 @@
         },
         "data": [
           {
-            "duration": 1800000,
-            "end_time": null,
-            "entity_ids": [
-              367291997
-            ],
-            "compare_with": null,
-            "metrics": [
-              {
-                "name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/IoThreadCount",
-                "units": null,
-                "scope": "",
-                "values": [
-                  "average_value"
-                ]
-              }
-            ],
-            "raw_metric_name": "JMX/org.xnio/Xnio/\"nio\"/\"default\"/IoThreadCount",
-            "facet": null,
-            "order_by": "average_value",
-            "limit": 10
+            "nrql": "SELECT * FROM InfrastructureEvent WHERE `ec2Tag_Name` LIKE'stpdistributions%' and provider = 'Ec2Instance' AND source LIKE 'aws/ec2%' SINCE 3 days ago LIMIT 1000"
           }
         ],
         "presentation": {
-          "title": "jbossapp01 - org.xnio/Xnio/\"nio\"/\"default\"/IoThreadCount",
+          "title": "stpdistributions-disvc-% EC2 Events - InfrastructureEvent",
           "notes": null
         }
       },
       {
-        "visualization": "billboard",
+        "visualization": "faceted_line_chart",
         "layout": {
           "width": 1,
           "height": 1,
@@ -133,20 +77,16 @@
         },
         "data": [
           {
-            "nrql": "SELECT count(*) from Transaction where appId = 281119826"
+            "nrql": "SELECT average(cpuPercent) FROM SystemSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE 'stpdistributions%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
           }
         ],
         "presentation": {
-          "title": "Some application's throughput",
-          "notes": "You can even do notes!",
-          "threshold": {
-            "red": 4,
-            "yellow": 1
-          }
+          "title": "stpdistributions-disvc-% CPU % - SystemSample",
+          "notes": null
         }
       },
       {
-        "visualization": "billboard",
+        "visualization": "faceted_line_chart",
         "layout": {
           "width": 1,
           "height": 1,
@@ -155,16 +95,84 @@
         },
         "data": [
           {
-            "nrql": "From KafkaConsumerLag select max(consumedPerSecond) where cluster = 'testme'"
+            "nrql": "SELECT average(memoryUsedBytes/memoryTotalBytes*100) FROM SystemSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE'stpdistributions%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
           }
         ],
         "presentation": {
-          "title": "Kafka monitoring targeting a specific environment!",
-          "notes": null,
-          "threshold": {
-            "red": null,
-            "yellow": null
+          "title": "stpdistributions Memory % - SystemSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 2,
+          "column": 3
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(totalUtilizationPercent) FROM StorageSample  FACET `entityAndMountPoint` WHERE (`ec2Tag_Name` LIKE 'stpdistributions%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
           }
+        ],
+        "presentation": {
+          "title": "stpdistributions Disk Utilization - StorageSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT sum(transmitPacketsPerSecond + receivePacketsPerSecond) FROM NetworkSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE 'stpdistributions%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "stpdistributions PacketsPerSecond - NetworkSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 2
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(`provider.cpuUtilization.Average`) from ComputeSample where provider='EcsCluster' where displayName like '%stpdistributions%' facet displayName SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "stpdistributions Clusters: CPU utilization (%) - ComputeSample ",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 3,
+          "column": 3
+        },
+        "data": [
+          {
+            "nrql": "SELECT sum(`provider.requestCount.Sum`) from LoadBalancerSample Facet displayName  WHERE displayName LIKE 'stpdistributions-disvc-alb%' and (provider='Alb' or provider='Elb') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "stpdistributions ALB / ELB Requests per second - LoadBalancerSample",
+          "notes": null
         }
       },
       {
@@ -172,15 +180,15 @@
         "layout": {
           "width": 1,
           "height": 1,
-          "row": 2,
-          "column": 3
+          "row": 4,
+          "column": 1
         },
         "data": [
           {
             "duration": 604800000,
             "end_time": null,
             "entity_ids": [
-              281119826
+              395112603
             ],
             "compare_with": null,
             "metrics": [
@@ -189,18 +197,153 @@
                 "units": null,
                 "scope": "",
                 "values": [
-                  "value"
+                  "score"
+                ]
+              },
+              {
+                "name": "EndUser/Apdex",
+                "units": null,
+                "scope": "",
+                "values": [
+                  "score"
                 ]
               }
             ],
             "raw_metric_name": "Apdex",
             "facet": null,
-            "order_by": "value",
-            "limit": 10
+            "order_by": null,
+            "limit": null
           }
         ],
         "presentation": {
-          "title": "PetClinicV2 - Apdex",
+          "title": "Apdex score",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "application_breakdown",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 4,
+          "column": 2
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              395112603
+            ],
+            "metrics": []
+          }
+        ],
+        "presentation": {
+          "title": "Average response time, by tier (ms)",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "billboard",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 4,
+          "column": 3
+        },
+        "data": [
+          {
+            "nrql": "SELECT uniqueCount(`ec2InstanceId`)  FROM ComputeSample  WHERE ec2Tag_AppName = 'stpdistributions' AND ec2Tag_Name LIKE 'stpdistributions%'  AND `provider.ec2State`='running' SINCE 30 minutes ago"
+          }
+        ],
+        "presentation": {
+          "title": "Uniq EC2 instances",
+          "notes": null,
+          "threshold": {
+            "red": 2,
+            "yellow": 3
+          }
+        }
+      },
+      {
+        "visualization": "background_breakdown",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 5,
+          "column": 1
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              395112603
+            ],
+            "metrics": []
+          }
+        ],
+        "presentation": {
+          "title": "Average response time from non-web transactions, broken down by measure",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "application_breakdown",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 5,
+          "column": 2
+        },
+        "data": [
+          {
+            "duration": 1800000,
+            "end_time": null,
+            "entity_ids": [
+              395112603
+            ]
+          }
+        ],
+        "presentation": {
+          "title": "Web transaction breakdown",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "metric_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1,
+          "row": 5,
+          "column": 3
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              395112603
+            ],
+            "compare_with": null,
+            "metrics": [
+              {
+                "name": "Errors/all",
+                "units": null,
+                "scope": "",
+                "values": [
+                  "error_rate"
+                ]
+              }
+            ],
+            "raw_metric_name": "Errors/all",
+            "facet": null,
+            "order_by": null,
+            "limit": null
+          }
+        ],
+        "presentation": {
+          "title": "Errors/all",
           "notes": null
         }
       }
