@@ -103,9 +103,9 @@ if (!process.argv.slice(7).length) {
   } else {
     var tag = '{"key": "appType", "value": "tomcat"}';   // We have good data so try to read the dashboard
 
-    console.log("read config file:" + program.dir + '/' + program.dash + '_config.json');
+    console.log("read config file:" + program.dir + '/' + program.dash + '_v2_config.json');
 
-    var rawData = fs.readFileSync(program.dir + '/' + program.dash + '_config.json');
+    var rawData = fs.readFileSync(program.dir + '/' + program.dash + '_v2_config.json');
     configJson  = JSON.parse(rawData);
     dashConfig = configJson.template_vars;
 
