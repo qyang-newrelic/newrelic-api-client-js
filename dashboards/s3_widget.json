@@ -1,0 +1,169 @@
+{
+    "widgets": [
+      {
+        "visualization": "facet_bar_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT uniqueCount(entityId) from ComputeSample WHERE `ec2Tag_Name` LIKE '{{ec2Tag_Name}}%' and provider = 'Ec2Instance' facet `provider.awsRegion` SINCE 3 days ago LIMIT 1000"
+          }
+        ],
+        "presentation": {
+          "title": "Instances per region - ComputeSample",
+          "notes": " Count of blah across all aws regoins repoting to new relic .... test",
+          "drilldown_dashboard_id": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT uniqueCount(entityId) from ComputeSample WHERE `ec2Tag_Name` LIKE'{{ec2Tag_Name}}%' and provider = 'Ec2Instance' facet `provider.ec2State` TIMESERIES SINCE 3 days ago LIMIT 1000"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}}-disvc-% Instance state - ComputeSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "event_feed",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT * FROM InfrastructureEvent WHERE `ec2Tag_Name` LIKE'{{ec2Tag_Name}}%' and provider = 'Ec2Instance' AND source LIKE 'aws/ec2%' SINCE 3 days ago LIMIT 1000"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}}-disvc-% EC2 Events - InfrastructureEvent",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(cpuPercent) FROM SystemSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE '{{ec2Tag_Name}}%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}}-disvc-% CPU % - SystemSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(memoryUsedBytes/memoryTotalBytes*100) FROM SystemSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE'{{ec2Tag_Name}}%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}} Memory % - SystemSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(totalUtilizationPercent) FROM StorageSample  FACET `entityAndMountPoint` WHERE (`ec2Tag_Name` LIKE '{{ec2Tag_Name}}%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}} Disk Utilization - StorageSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT sum(transmitPacketsPerSecond + receivePacketsPerSecond) FROM NetworkSample FACET `entityName` WHERE (`ec2Tag_Name` LIKE '{{ec2Tag_Name}}%') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}} PacketsPerSecond - NetworkSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT average(`provider.cpuUtilization.Average`) from ComputeSample where provider='EcsCluster' where displayName like '%{{ec2Tag_Name}}%' facet displayName SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}} Clusters: CPU utilization (%) - ComputeSample ",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "faceted_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT sum(`provider.requestCount.Sum`) from LoadBalancerSample Facet displayName  WHERE displayName LIKE '{{ec2Tag_Name}}-disvc-alb%' and (provider='Alb' or provider='Elb') SINCE 3 days ago LIMIT 1000 TIMESERIES"
+          }
+        ],
+        "presentation": {
+          "title": "{{ec2Tag_Name}} ALB / ELB Requests per second - LoadBalancerSample",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "billboard",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "nrql": "SELECT uniqueCount(`ec2InstanceId`)  FROM ComputeSample  WHERE ec2Tag_AppName = '{{ec2Tag_Name}}' AND ec2Tag_Name LIKE '{{ec2Tag_Name}}%'  AND `provider.ec2State`='running' SINCE 30 minutes ago"
+          }
+        ],
+        "presentation": {
+          "title": "Uniq EC2 instances",
+          "notes": null,
+          "threshold": {
+            "red": 2,
+            "yellow": 3
+          }
+        }
+      }
+    ]
+}

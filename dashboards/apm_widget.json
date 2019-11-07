@@ -1,0 +1,122 @@
+{
+    "widgets": [
+      {
+        "visualization": "metric_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              {{appId}}
+            ],
+            "compare_with": null,
+            "metrics": [
+              {
+                "name": "Apdex",
+                "units": null,
+                "scope": "",
+                "values": [
+                  "score"
+                ]
+              },
+              {
+                "name": "EndUser/Apdex",
+                "units": null,
+                "scope": "",
+                "values": [
+                  "score"
+                ]
+              }
+            ],
+            "raw_metric_name": "Apdex",
+            "facet": null,
+            "order_by": null,
+            "limit": null
+          }
+        ],
+        "presentation": {
+          "title": "Apdex score",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "application_breakdown",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              {{appId}}
+            ]
+          }
+        ],
+        "presentation": {
+          "title": "Average response time, by tier (ms)",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "background_breakdown",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              {{appId}}
+            ]
+          }
+        ],
+        "presentation": {
+          "title": "Average response time from non-web transactions, broken down by measure",
+          "notes": null
+        }
+      },
+      {
+        "visualization": "metric_line_chart",
+        "layout": {
+          "width": 1,
+          "height": 1
+        },
+        "data": [
+          {
+            "duration": 604800000,
+            "end_time": null,
+            "entity_ids": [
+              {{appId}}
+            ],
+            "compare_with": null,
+            "metrics": [
+              {
+                "name": "Errors/all",
+                "units": null,
+                "scope": "",
+                "values": [
+                  "error_rate"
+                ]
+              }
+            ],
+            "raw_metric_name": "Errors/all",
+            "facet": null,
+            "order_by": null,
+            "limit": null
+          }
+        ],
+        "presentation": {
+          "title": "Errors/all",
+          "notes": null
+        }
+      }
+    ]
+}
