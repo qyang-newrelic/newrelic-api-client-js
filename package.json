@@ -9,6 +9,7 @@
     "config": "^1.21.0",
     "lodash": "4.17.11",
     "mustache": "^3.1.0",
+    "neo4j-driver": "^4.0.1",
     "request": "2.88.0"
   },
   "scripts": {

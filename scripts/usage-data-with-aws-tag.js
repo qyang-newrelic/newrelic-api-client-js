@@ -37,11 +37,34 @@ var nrql_limit = 2000;
 
 function toInsights(obj) {
 	var jsonArr = Object.values(obj);
-  console.log("data size: ", jsonArr.length);
-	insights.publish(jsonArr, publishId, function(error, response, body) {
-		console.log(response.body);	
-	});
-
+	//var jsonArr = obj;
+  var objSize = JSON.stringify(jsonArr).length;
+  if ( objSize > 900000 ) {
+  	console.log("Object size exceeds the limit,size=", objSize);  
+  	var numBlocks = Math.ceil(objSize/600000);
+  	var blockSize = Math.ceil(jsonArr.length / numBlocks);
+  	console.log("Block =", numBlocks);  
+  	var i=0;
+  	while (i < jsonArr.length) { 
+			var jsonBlock = jsonArr.slice(i,i+blockSize+1);
+			insights.publish(jsonBlock, publishId, function(error, response, body) {
+ 				if (error) {
+					console.error("Insert to insights failed!");
+        } else {
+					console.log(response.body);	
+				}
+			});
+  		i+=blockSize;
+		}
+  } else {
+		insights.publish(jsonArr, publishId, function(error, response, body) {
+ 			if (error) {
+				console.error("Insert to insights failed!");
+      } else {
+				console.log(response.body);	
+			}
+		});
+	} 
 }
 
 
@@ -274,9 +297,26 @@ function runQueries() {
   runQuery(nrqlInfra, 'infra', parseInfraUsage);
 
   var nrqlEc2 = NRQL_EC2 + ' limit ' + nrql_limit + ' SINCE ' + awsSinceEpoch + ' UNTIL ' + untilEpoch;
-
-  // console.log(nrqlEc2);
   runEC2Query(nrqlEc2, 'EC2');
+
+  /*
+  var batch=86400 / 2;
+
+  var numQueries = Math.ceil((untilEpoch-awsSinceEpoch)/batch);
+
+  doneExpected = 2 +  numQueries ;
+
+  var thisStart = awsSinceEpoch;
+  var thisUntil = thisStart + batch;
+  for (i=0; i++ ; i < numQueries) {
+   var thisStart = awsSinceEpoch + i * batch;
+   var thisUntil = thisStart + batch;
+   var nrqlEc2 = NRQL_EC2 + ' limit ' + nrql_limit + ' SINCE ' + thisStart + ' UNTIL ' + thisUntil;
+   console.log(nrqlEc2);
+   runEC2Query(nrqlEc2, 'EC2');
+  }
+
+  */
 
 }
 

@@ -77,7 +77,7 @@ function createDashboard(error, response, body)
     }
     
     console.log(JSON.stringify(newDash,null,2));    
- 	  //dashboards.create(newDash, program.dest, handleCreate);
+ 	  dashboards.create(newDash, program.dest, handleCreate);
 
 
   }
